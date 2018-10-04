@@ -160,7 +160,7 @@ export default {
         padding 0 0.5em
         font-size 14px
         & > i[loading]
-          animation spin 2s linear infinite
+            animation spin 2s linear infinite
 
 @media print
   .no-print, .no-print *

@@ -119,6 +119,7 @@ export const fetchFactsheets = async ({ commit, state }, { filter, factsheets } 
 }
 
 export const fetchDataset = async ({ commit, dispatch, state }, { filter } = {}) => {
+  lx.showSpinner()
   if (filter === undefined) filter = state.filter
   let factsheets = await dispatch('fetchFactsheets', { filter })
 
@@ -157,6 +158,7 @@ export const fetchDataset = async ({ commit, dispatch, state }, { filter } = {})
   commit('setLoading', false)
   commit('setDataset', mapped)
   dispatch('mapNodes')
+  lx.hideSpinner()
 }
 
 // aggregates factsheet children by filtering by level

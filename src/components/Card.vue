@@ -344,4 +344,5 @@ input[type=text], select
   display flex
   flex 1
   justify-content space-between
+
 </style>
