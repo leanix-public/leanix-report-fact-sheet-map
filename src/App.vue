@@ -9,7 +9,7 @@
       </div>
       <div class="control zoom">
         <span>Zoom</span>
-        <input type="range" min="0" :max="maxZoom" step="1" v-model="currentZoom">
+        <input type="range" min="0" :max="maxZoom" step="1" v-model="currentZoom" @dblclick="currentZoom = 100">
         <span style="width: 20px">{{currentZoom}}%</span>
       </div>
     </div>
@@ -93,7 +93,7 @@ export default {
       }
     },
     fontSize () {
-      return 0.07429 * this.zoom + 4.643
+      return 0.06429 * this.zoom + 4.643
     }
   },
   watch: {
