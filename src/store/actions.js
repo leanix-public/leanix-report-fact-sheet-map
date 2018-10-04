@@ -61,6 +61,7 @@ export const fetchDataset = ({ commit, dispatch, state }) => {
             name
             displayName
             rev
+            level
             ... on BusinessCapability {
               parent: relToParent {
                 edges {
@@ -80,6 +81,7 @@ export const fetchDataset = ({ commit, dispatch, state }) => {
   `
   lx.executeGraphQL(query, { filter })
     .then(res => {
+      console.log('res', res)
       const dataset = res.op.edges
         .map(edge => { edge.node.parent = edge.node.parent.edges.map(edge => { return { relID: edge.node.id, id: edge.node.factSheet.id } }).shift(); return edge.node })
         .sort((a, b) => {
