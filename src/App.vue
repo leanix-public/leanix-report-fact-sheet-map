@@ -1,6 +1,28 @@
 <template>
   <div id="app">
     <notifications group="report" position="bottom right"/>
+    <modal v-if="showConfigurationModal" @close="showConfigurationModal = false">
+      <div slot="header" class="mod-header">
+        <h4 style="display: inline-block">Configure</h4>
+        <span class="close" @click.stop="showConfigurationModal = false">
+          <font-awesome-icon icon="times"/>
+        </span>
+      </div>
+      <div slot="body">
+        <label>Factsheet Type</label>
+        <select v-model="selectedFactsheetType">
+          <option v-for="factsheet in Object.values(factsheetTypes).filter(type => type.singular)" :key="factsheet.type" :value="factsheet.type">
+            {{ factsheet.singular }}
+          </option>
+        </select>
+      </div>
+      <div slot="footer">
+        <div class="btn-group">
+          <button class="btn" @click.stop="showConfigurationModal = false">Cancel</button>
+          <button class="btn btn-success" @click.stop="applyConfiguration">Apply</button>
+        </div>
+      </div>
+    </modal>
     <div class="row controls no-print">
       <div class="control levels">
         <span>Levels</span>
@@ -30,11 +52,18 @@ export default {
   components: { Card, Modal },
   data () {
     return {
-      showConfigurationModal: false
+      showConfigurationModal: false,
+      selected: ''
     }
   },
   methods: {
-    ...mapActions(['fetchDataset', 'setFilter', 'setLevel', 'setLegendItems', 'setViewMapping', 'setEditing', 'setZoom', 'setSelected']),
+    ...mapActions(['fetchDataset', 'setFilter', 'setLevel', 'setLegendItems', 'setViewMapping', 'setEditing', 'setZoom', 'setReportSetup', 'setFactsheetType']),
+    applyConfiguration () {
+      const reportConfig = this.getReportConfig(this.reportSetup)
+      console.log('applying configuration', this.reportSetup, reportConfig)
+      this.$lx.updateConfiguration(reportConfig)
+      this.showConfigurationModal = false
+    },
     getReportConfig (setupConfig) {
       const config = {
         allowEditing: true,
@@ -43,10 +72,8 @@ export default {
           exportElementSelector: '.export-container'
         },
         menuActions: {
-          showConfigure: false,
-          configureCallback: () => {
-            console.log('configuring')
-          }
+          showConfigure: true,
+          configureCallback: () => { this.showConfigurationModal = true }
         },
         facets: [
           {
@@ -78,7 +105,15 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['dataset', 'filter', 'level', 'nodes', 'legendItems', 'editing', 'maxLevel', 'factsheetType', 'zoom', 'maxZoom', 'selected', 'hoverID']),
+    ...mapGetters(['dataset', 'filter', 'level', 'nodes', 'legendItems', 'editing', 'maxLevel', 'factsheetType', 'zoom', 'maxZoom', 'hoverID', 'factsheetTypes', 'reportSetup']),
+    selectedFactsheetType: {
+      get () {
+        return this.factsheetType
+      },
+      set (factsheetType) {
+        this.setFactsheetType(factsheetType)
+      }
+    },
     currentLevel: {
       set (val) {
         this.setLevel(val)
@@ -107,6 +142,7 @@ export default {
   created () {
     this.$lx.init()
       .then(setup => {
+        this.setReportSetup(setup)
         const reportConfig = this.getReportConfig(setup)
         this.$lx.showEditToggle()
         this.$lx.ready(reportConfig)

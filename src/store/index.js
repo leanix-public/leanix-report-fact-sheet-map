@@ -7,6 +7,12 @@ import * as mutations from './mutations'
 Vue.use(Vuex)
 
 const state = {
+  reportSetup: {},
+  reportConfig: {},
+  reportId: '',
+  reportSavedState: {},
+  reportSettings: {},
+  factsheetTypes: {},
   factsheetType: 'BusinessCapability',
   loading: false,
   editing: false,
