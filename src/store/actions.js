@@ -1,5 +1,13 @@
 import Vue from 'vue'
 
+export const setReportSetup = ({ commit }, setup) => {
+  commit('setReportSetup', setup)
+}
+
+export const setFactsheetType = ({ commit }, factsheetType) => {
+  commit('setFactsheetType', factsheetType)
+}
+
 export const setLevel = ({ commit, dispatch }, level) => {
   commit('setLevel', level)
   dispatch('mapNodes')
@@ -51,6 +59,7 @@ export const setFilter = ({ commit }, filter) => {
 }
 
 export const fetchFactsheets = async ({ commit, state }, { filter, factsheets } = {}) => {
+  const factsheetType = state.factsheetType
   const query = `
     query($filter:FilterInput){
       op:allFactSheets(filter:$filter) {
@@ -61,7 +70,7 @@ export const fetchFactsheets = async ({ commit, state }, { filter, factsheets } 
             displayName
             rev
             level
-            ... on BusinessCapability {
+            ... on ${factsheetType} {
               parent: relToParent {
                 edges {
                   node {
@@ -233,7 +242,8 @@ export const mapNodesOriginalAggregation = ({ commit, state }) => {
 }
 
 export const createFactsheet = ({commit, dispatch, state}, { name, parentID }) => {
-  const parentFragment = `... on BusinessCapability{parent:relToParent{edges{node{factSheet{id}}}}}`
+  const factsheetType = state.factsheetType
+  const parentFragment = `... on ${factsheetType}{parent:relToParent{edges{node{factSheet{id}}}}}`
   const query = `mutation($input:BaseFactSheetInput!,$patches:[Patch]){op:createFactSheet(input:$input,patches:$patches){factSheet{id type name displayName ${parentFragment}}}}`
   const variables = {
     input: {

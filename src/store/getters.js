@@ -11,3 +11,7 @@ export const maxLevel = state => state.maxLevel
 export const zoom = state => state.zoom
 export const maxZoom = state => state.maxZoom
 export const hoverID = state => state.hoverID
+export const reportSettings = state => state.reportSettings
+export const translations = state => state.reportSettings ? state.reportSettings.translations : {}
+export const factsheetTypes = state => state.factsheetTypes
+export const reportSetup = state => state.reportSetup

@@ -19,7 +19,12 @@
       </div>
     </modal>
     <modal v-if="showDeleteFactsheetModal" @close="showDeleteFactsheetModal = false">
-      <h4 slot="header">Confirm {{factsheetType}} deletion</h4>
+      <div slot="header" class="mod-header">
+        <h4 style="display: inline-block">Confirm Deletion</h4>
+        <span class="close" @click.stop="showDeleteFactsheetModal = false">
+          <font-awesome-icon icon="times"/>
+        </span>
+      </div>
       <template slot="body">
         <div style="font-size: 1.2em">Delete {{node.displayName}}?</div>
       </template>
@@ -279,70 +284,4 @@ $section-border = 1px solid #C5C5C5
         width "calc(100% * (1/3) - %s)" % $card-body-padding
         margin-right $card-body-padding
         margin-bottom $card-body-padding
-
-label
-  display inline-block
-  max-width 100%
-  margin-bottom 5px
-  font-weight 700
-
-input[type=text], select
-  width 100%
-  border 1px solid #aaa
-  border-radius 3px
-  box-sizing border-box
-  padding 4px
-
-.btn-group
-  & > .btn
-    margin-right 0.4em
-
-.btn
-  display inline-block
-  margin-bottom 0
-  font-weight 400
-  -ms-touch-action manipulation
-  touch-action manipulation
-  cursor pointer
-  background-image none
-  border 1px solid transparent
-  white-space nowrap
-  padding 6px 12px
-  font-size 12px
-  line-height 1.428571429
-  border-radius 3px
-  border-color #ccc
-  -webkit-user-select none
-  -moz-user-select none
-  -ms-user-select none
-  user-select none
-  background-image linear-gradient(to bottom,#fff 0,#e0e0e0 100%)
-  text-shadow 0 1px 0 #fff
-  box-shadow inset 0 1px 0 rgba(255,255,255,.15), 0 1px 1px rgba(0,0,0,.075)
-  &.flat
-    background transparent
-    border 0
-    box-shadow none
-
-.btn-success
-  background-image linear-gradient(to bottom,#5cb85c 0,#419641 100%)
-  color white
-  background-color #5cb85c
-  text-shadow 0 -1px 0 rgba(0,0,0,.2)
-  border-color #3e8f3e
-  &:hover
-    background-color darken(#5cb85c, 10%)
-
-.close
-  font-weight 700
-  font-size 1em
-  color #000
-  text-shadow 0 1px 0 #fff
-  opacity 0.2
-  cursor pointer
-.mod-header
-  display flex
-  flex 1
-  justify-content space-between
-
 </style>
