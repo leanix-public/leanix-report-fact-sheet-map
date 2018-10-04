@@ -1,6 +1,6 @@
 {
   "name": "leanix-report-hierarchical-factsheet-editor",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "LeanIX custom report build with Vue.js.",
   "author": "Paulo dos Santos",
   "private": true,

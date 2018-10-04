@@ -13,7 +13,7 @@
         <span style="width: 20px">{{currentZoom}}%</span>
       </div>
     </div>
-    <div class="row" :style="`font-size: ${fontSize}px`" style="margin-top: 2rem">
+    <div class="row export-container" :style="`font-size: ${fontSize}px`" style="margin-top: 2rem">
       <card v-for="node in nodes" :key="node.id" :node="node" :factsheetType="factsheetType"/>
     </div>
 
@@ -39,6 +39,9 @@ export default {
       const config = {
         allowEditing: true,
         allowTableView: true,
+        export: {
+          exportElementSelector: '.export-container'
+        },
         menuActions: {
           showConfigure: false,
           configureCallback: () => {
