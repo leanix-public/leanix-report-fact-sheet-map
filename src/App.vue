@@ -1,11 +1,7 @@
 <template>
   <div id="app">
     <notifications group="report" position="bottom right"/>
-    <div class="row controls">
-      <div class="control btn editing" @click="setEditing(!editing)" :editing="editing">
-        <font-awesome-icon icon="pen"/>
-        {{editing ? 'Disable' : 'Enable'}} Editing
-      </div>
+    <div class="row controls no-print">
       <div class="control levels">
         <span>Levels</span>
         <input type="range" min="1" :max="maxLevel" step="1" v-model="currentLevel">
@@ -67,9 +63,7 @@ export default {
           this.setLegendItems(legendItems)
           this.setViewMapping(mapping)
         },
-        toggleEditingCallback: () => {
-          console.log('editing!!!')
-        },
+        toggleEditingCallback: editing => this.setEditing(editing),
         tableConfigCallback: () => {
           return {
             factSheetType: this.factsheetType,
@@ -111,6 +105,7 @@ export default {
     this.$lx.init()
       .then(setup => {
         const reportConfig = this.getReportConfig(setup)
+        this.$lx.showEditToggle()
         this.$lx.ready(reportConfig)
       })
   }
@@ -137,7 +132,7 @@ export default {
   &.controls
     align-items flex-start
     position fixed
-    right 10
+    right 1em
     align-self flex-end
     & > .control
       font-size 11px
@@ -166,6 +161,10 @@ export default {
         font-size 14px
         & > i[loading]
           animation spin 2s linear infinite
+
+@media print
+  .no-print, .no-print *
+    display none !important
 
 @keyframes spin
     0%
