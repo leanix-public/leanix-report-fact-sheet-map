@@ -98,14 +98,6 @@ export default {
   },
   computed: {
     ...mapGetters(['legendItems', 'viewMapping', 'editing', 'factsheetType', 'maxLevel', 'hoverID']),
-    children: {
-      get () {
-        return this.node.children
-      },
-      set (val) {
-        console.log('setting children', val)
-      }
-    },
     name () {
       // wrap at 30 characters´
       return this.node.name && this.node.name.length > 37 ? `${this.node.name.substr(0, 37)}...` : this.node.name
@@ -148,7 +140,6 @@ export default {
       event.stopPropagation()
     },
     handleDragEnter (transferData, nativeElement) {
-      console.log('drag enter', transferData, nativeElement)
       this.over = true
     },
     handleDragOver (transferData, nativeElement) {
@@ -156,22 +147,14 @@ export default {
       this.over = true
     },
     handleDragLeave (transferData, nativeElement) {
-      console.log('drag leave', transferData, nativeElement)
+      // console.log('drag leave', transferData, nativeElement)
       this.over = false
     },
     handleDrop (data, event) {
       if (this.over) {
-        // const sourceName = data.displayName
-        // const targetName = this.node.displayName
-        // console.log(`${sourceName} => ${targetName}`)
         this.updateFactsheetParent({ source: data, target: this.node })
         this.over = false
       }
-    }
-  },
-  watch: {
-    over (val) {
-      console.log('overing', val, this.node.id)
     }
   }
 }

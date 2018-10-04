@@ -257,7 +257,6 @@ export const createFactsheet = ({commit, dispatch, state}, { name, parentID }) =
   }
   return lx.executeGraphQL(query, variables)
     .then(res => {
-      console.log('res', res)
       Vue.notify({
         group: 'report',
         type: 'success',
@@ -286,7 +285,6 @@ export const archiveFactsheet = ({commit, dispatch, state}, id) => {
   }
   return lx.executeGraphQL(query, variables)
     .then(res => {
-      console.log('res', res)
       Vue.notify({
         group: 'report',
         type: 'success',

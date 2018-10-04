@@ -60,7 +60,6 @@ export default {
     ...mapActions(['fetchDataset', 'setFilter', 'setLevel', 'setLegendItems', 'setViewMapping', 'setEditing', 'setZoom', 'setReportSetup', 'setFactsheetType']),
     applyConfiguration () {
       const reportConfig = this.getReportConfig(this.reportSetup)
-      console.log('applying configuration', this.reportSetup, reportConfig)
       this.$lx.updateConfiguration(reportConfig)
       this.showConfigurationModal = false
     },
