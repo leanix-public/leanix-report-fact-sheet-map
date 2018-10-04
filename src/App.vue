@@ -98,7 +98,7 @@ export default {
   },
   watch: {
     filter (val) {
-      this.fetchDataset() // triggers the first report API fetch
+      this.fetchDataset({ filter: this.filter }) // triggers the first report API fetch
     }
   },
   created () {

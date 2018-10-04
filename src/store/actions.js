@@ -50,8 +50,7 @@ export const setFilter = ({ commit }, filter) => {
   commit('setFilter', filter)
 }
 
-export const fetchDataset = ({ commit, dispatch, state }) => {
-  const filter = state.filter
+export const fetchFactsheets = async ({ commit, state }, { filter, factsheets } = {}) => {
   const query = `
     query($filter:FilterInput){
       op:allFactSheets(filter:$filter) {
@@ -79,9 +78,8 @@ export const fetchDataset = ({ commit, dispatch, state }) => {
       }
     }
   `
-  lx.executeGraphQL(query, { filter })
+  const dataset = await lx.executeGraphQL(query, { filter })
     .then(res => {
-      console.log('res', res)
       const dataset = res.op.edges
         .map(edge => { edge.node.parent = edge.node.parent.edges.map(edge => { return { relID: edge.node.id, id: edge.node.factSheet.id } }).shift(); return edge.node })
         .sort((a, b) => {
@@ -95,44 +93,17 @@ export const fetchDataset = ({ commit, dispatch, state }) => {
         .reduce((accumulator, node) => {
           let level = 1
           if (node.parent) {
-            const parent = accumulator[node.parent.id] || {}
-            const children = parent && Array.isArray(parent.children) ? parent.children : []
-            children.push(node.id)
-            accumulator[node.parent.id] = { ...parent, children }
+            const parent = accumulator[node.parent.id] || { id: node.parent.id }
+            parent.children = parent.children || []
+            parent.children.push(node.id)
+            accumulator[node.parent.id] = { ...parent }
             level = parent.level ? parent.level + 1 : undefined
           }
-          if (node.parent === undefined) node.root = true
           accumulator[node.id] = { ...(accumulator[node.id] || {}), ...node, level }
           return accumulator
-        }, {})
+        }, factsheets || {})
 
-      const mapFactsheetChildren = (child, parent) => {
-        if (typeof child === 'string') {
-          child = dataset[child]
-          if (child.level === undefined) {
-            child.level = parent.level ? parent.level + 1 : undefined
-          }
-        }
-        if (Array.isArray(child.children)) {
-          child.children = child.children
-            .map(_child => mapFactsheetChildren(_child, child))
-            .filter(_child => _child.level <= state.maxLevel)
-        }
-        return child
-      }
-      const mapped = Object.values(dataset)
-        .filter(factsheet => factsheet.root === true)
-        // Sort top level factsheets alphabetically
-        .sort((a, b) => {
-          if (a.name < b.name) return -1
-          if (a.name > b.name) return 1
-          return 0
-        })
-        .map(mapFactsheetChildren)
-      commit('setLoading', false)
-      commit('setDataset', mapped)
-      dispatch('mapNodes')
-      return Promise.resolve(mapped)
+      return Promise.resolve(dataset)
     })
     .catch(err => {
       Vue.notify({
@@ -144,6 +115,48 @@ export const fetchDataset = ({ commit, dispatch, state }) => {
       commit('setLoading', false)
       console.error(err)
     })
+  return dataset
+}
+
+export const fetchDataset = async ({ commit, dispatch, state }, { filter } = {}) => {
+  if (filter === undefined) filter = state.filter
+  let factsheets = await dispatch('fetchFactsheets', { filter })
+
+  const mapFactsheetChildren = (child, parent) => {
+    if (typeof child === 'string') {
+      child = factsheets[child]
+      if (child.level === undefined) {
+        child.level = parent.level ? parent.level + 1 : undefined
+      }
+    }
+    if (Array.isArray(child.children)) {
+      child.children = child.children
+        .map(_child => mapFactsheetChildren(_child, child))
+        .filter(_child => _child.level <= state.maxLevel)
+    }
+    return child
+  }
+
+  let factsheetsToResolve = []
+  do {
+    factsheetsToResolve = Object.values(factsheets).filter(factsheet => !factsheet.name).map(factsheet => factsheet.id)
+    if (factsheetsToResolve.length) {
+      factsheets = await dispatch('fetchFactsheets', { filter: { ids: factsheetsToResolve }, factsheets })
+    }
+  } while (factsheetsToResolve.length)
+
+  const mapped = Object.values(factsheets)
+    .filter(factsheet => factsheet.level === 1)
+    // Sort top level factsheets alphabetically
+    .sort((a, b) => {
+      if (a.name < b.name) return -1
+      if (a.name > b.name) return 1
+      return 0
+    })
+    .map(mapFactsheetChildren)
+  commit('setLoading', false)
+  commit('setDataset', mapped)
+  dispatch('mapNodes')
 }
 
 // aggregates factsheet children by filtering by level
