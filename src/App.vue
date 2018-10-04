@@ -1,11 +1,7 @@
 <template>
   <div id="app">
     <notifications group="report" position="bottom right"/>
-    <div class="row controls">
-      <div class="control btn editing" @click="setEditing(!editing)" :editing="editing">
-        <font-awesome-icon icon="pen"/>
-        {{editing ? 'Disable' : 'Enable'}} Editing
-      </div>
+    <div class="row controls no-print">
       <div class="control levels">
         <span>Levels</span>
         <input type="range" min="1" :max="maxLevel" step="1" v-model="currentLevel">
@@ -13,11 +9,11 @@
       </div>
       <div class="control zoom">
         <span>Zoom</span>
-        <input type="range" min="0" :max="maxZoom" step="1" v-model="currentZoom">
+        <input type="range" min="0" :max="maxZoom" step="1" v-model="currentZoom" @dblclick="currentZoom = 100">
         <span style="width: 20px">{{currentZoom}}%</span>
       </div>
     </div>
-    <div class="row" :style="`font-size: ${fontSize}px`" style="margin-top: 2rem">
+    <div class="row export-container" :style="`font-size: ${fontSize}px`" style="margin-top: 2rem">
       <card v-for="node in nodes" :key="node.id" :node="node" :factsheetType="factsheetType"/>
     </div>
 
@@ -43,6 +39,9 @@ export default {
       const config = {
         allowEditing: true,
         allowTableView: true,
+        export: {
+          exportElementSelector: '.export-container'
+        },
         menuActions: {
           showConfigure: false,
           configureCallback: () => {
@@ -67,9 +66,7 @@ export default {
           this.setLegendItems(legendItems)
           this.setViewMapping(mapping)
         },
-        toggleEditingCallback: () => {
-          console.log('editing!!!')
-        },
+        toggleEditingCallback: editing => this.setEditing(editing),
         tableConfigCallback: () => {
           return {
             factSheetType: this.factsheetType,
@@ -99,18 +96,19 @@ export default {
       }
     },
     fontSize () {
-      return 0.07429 * this.zoom + 4.643
+      return 0.06429 * this.zoom + 4.643
     }
   },
   watch: {
     filter (val) {
-      this.fetchDataset() // triggers the first report API fetch
+      this.fetchDataset({ filter: this.filter }) // triggers the first report API fetch
     }
   },
   created () {
     this.$lx.init()
       .then(setup => {
         const reportConfig = this.getReportConfig(setup)
+        this.$lx.showEditToggle()
         this.$lx.ready(reportConfig)
       })
   }
@@ -137,7 +135,7 @@ export default {
   &.controls
     align-items flex-start
     position fixed
-    right 10
+    right 1em
     align-self flex-end
     & > .control
       font-size 11px
@@ -165,7 +163,11 @@ export default {
         padding 0 0.5em
         font-size 14px
         & > i[loading]
-          animation spin 2s linear infinite
+            animation spin 2s linear infinite
+
+@media print
+  .no-print, .no-print *
+    display none !important
 
 @keyframes spin
     0%

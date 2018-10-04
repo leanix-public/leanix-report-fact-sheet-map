@@ -179,8 +179,9 @@ $border-radius = 6px
 $card-max-width = 25em
 $collapsed-height = 5em
 $card-body-padding = 8px
-$body-background-color = #F3F3F3
+$body-background-color = #f3f3f3
 $header-background-color = #354567
+$section-border = 1px solid #C5C5C5
 
 .drag-container
   border-radius $border-radius
@@ -199,7 +200,7 @@ $header-background-color = #354567
 
   .section
     // z-depth-2dp() // Uncomment for material layout
-    border 1px solid #C5C5C5
+    border $section-border
     border-radius $border-radius
     &[over]
       background-color clr-grey-800 !important
@@ -241,8 +242,8 @@ $header-background-color = #354567
     display flex
     flex-flow row
     padding 8px
-    border-radius 4px 4px 0px 0px
-    border-bottom 1px solid #C5C5C5
+    border-radius 6px 6px 0px 0px
+    border-bottom $section-border
     color white
     white-space nowrap
     overflow hidden
@@ -343,4 +344,5 @@ input[type=text], select
   display flex
   flex 1
   justify-content space-between
+
 </style>

@@ -1,6 +1,6 @@
 {
-  "name": "leanix-business-capabilities",
-  "version": "1.0.0-dev-3",
+  "name": "leanix-report-hierarchical-factsheet-editor",
+  "version": "1.0.0-rc.1",
   "description": "LeanIX custom report build with Vue.js.",
   "author": "Paulo dos Santos",
   "private": true,
@@ -86,8 +86,8 @@
     "not ie <= 8"
   ],
   "leanixReport": {
-    "id": "net.leanix.business-capabilities",
-    "title": "LeanIX Business Capabilities",
+    "id": "net.leanix.hierarchical-factsheet-editor",
+    "title": "Hierarchical Factsheet Editor",
     "defaultConfig": {}
   }
 }
