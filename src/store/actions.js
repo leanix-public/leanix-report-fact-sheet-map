@@ -144,7 +144,38 @@ export const fetchDataset = ({ commit, dispatch, state }) => {
     })
 }
 
+// aggregates factsheet children by filtering by level
 export const mapNodes = ({ commit, state }) => {
+  const dataset = JSON.parse(JSON.stringify(state.dataset))
+  const level = state.level
+
+  const sortByChildCountAndName = (a, b) => {
+    const childrenA = Array.isArray(a.children) ? a.children.length : 0
+    const childrenB = Array.isArray(b.children) ? b.children.length : 0
+    if (childrenA < childrenB) return -1
+    else if (childrenA > childrenB) return 1
+    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
+  }
+
+  const sortByName = (a, b) => { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0 }
+
+  const aggregateChildren = (factsheet, level) => {
+    if (Array.isArray(factsheet.children) && level > 1) {
+      factsheet.children = factsheet.children.map(child => aggregateChildren(child, level))
+    } else {
+      factsheet.children = []
+    }
+    factsheet.children = factsheet.children.filter(factsheet => factsheet.level <= level).sort(sortByChildCountAndName)
+    return factsheet
+  }
+  const mapped = dataset
+    .map(factsheet => aggregateChildren(factsheet, level))
+    .sort(sortByName)
+  commit('setNodes', mapped)
+}
+
+// Aggregates factsheet children by bottom nodes after level threshold
+export const mapNodesOriginalAggregation = ({ commit, state }) => {
   const dataset = JSON.parse(JSON.stringify(state.dataset))
   const level = state.level
 
