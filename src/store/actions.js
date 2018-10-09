@@ -14,7 +14,6 @@ export const setLevel = ({ commit, dispatch }, level) => {
 }
 
 export const setEditing = ({ commit }, editing) => {
-  if (!editing) commit('setSelected', '')
   commit('setEditing', editing)
 }
 
@@ -111,7 +110,6 @@ export const fetchFactsheets = async ({ commit, state }, { filter, factsheets } 
           accumulator[node.id] = { ...(accumulator[node.id] || {}), ...node, level }
           return accumulator
         }, factsheets || {})
-
       return Promise.resolve(dataset)
     })
     .catch(err => {
@@ -127,8 +125,8 @@ export const fetchFactsheets = async ({ commit, state }, { filter, factsheets } 
   return dataset
 }
 
-export const fetchDataset = async ({ commit, dispatch, state }, { filter } = {}) => {
-  lx.showSpinner()
+export const fetchDataset = async ({ commit, dispatch, state }, { filter, silent } = {}) => {
+  if (silent !== true) lx.showSpinner()
   if (filter === undefined) filter = state.filter
   let factsheets = await dispatch('fetchFactsheets', { filter })
 
@@ -148,12 +146,23 @@ export const fetchDataset = async ({ commit, dispatch, state }, { filter } = {})
   }
 
   let factsheetsToResolve = []
+  let iterations = 0
   do {
     factsheetsToResolve = Object.values(factsheets).filter(factsheet => !factsheet.name).map(factsheet => factsheet.id)
     if (factsheetsToResolve.length) {
+      iterations++
       factsheets = await dispatch('fetchFactsheets', { filter: { ids: factsheetsToResolve }, factsheets })
     }
-  } while (factsheetsToResolve.length)
+  } while (factsheetsToResolve.length && iterations < 10)
+  if (factsheetsToResolve.length) {
+    Vue.notify({
+      group: 'report',
+      type: 'warn',
+      title: 'Could not resolve some factsheets!',
+      text: `Check console for more details`
+    })
+    console.warn(`Could not resolve the following factsheets`, factsheetsToResolve)
+  }
 
   const mapped = Object.values(factsheets)
     .filter(factsheet => factsheet.level === 1)
@@ -167,7 +176,7 @@ export const fetchDataset = async ({ commit, dispatch, state }, { filter } = {})
   commit('setLoading', false)
   commit('setDataset', mapped)
   dispatch('mapNodes')
-  lx.hideSpinner()
+  if (silent !== true) lx.hideSpinner()
 }
 
 // aggregates factsheet children by filtering by level
@@ -241,10 +250,11 @@ export const mapNodesOriginalAggregation = ({ commit, state }) => {
   commit('setNodes', mapped)
 }
 
-export const createFactsheet = ({commit, dispatch, state}, { name, parentID }) => {
+export const createFactsheet = ({commit, dispatch, state}, { name, parent }) => {
   const factsheetType = state.factsheetType
-  const parentFragment = `... on ${factsheetType}{parent:relToParent{edges{node{factSheet{id}}}}}`
-  const query = `mutation($input:BaseFactSheetInput!,$patches:[Patch]){op:createFactSheet(input:$input,patches:$patches){factSheet{id type name displayName ${parentFragment}}}}`
+  const parentFragment = `... on ${factsheetType}{parent:relToParent{edges{node{id factSheet{id name}}}}}`
+  const factsheetFragment = `factSheet{id name displayName rev level ${parentFragment}}`
+  const query = `mutation($input:BaseFactSheetInput!,$patches:[Patch]){op:createFactSheet(input:$input,patches:$patches){${factsheetFragment}}}`
   const variables = {
     input: {
       name,
@@ -252,34 +262,49 @@ export const createFactsheet = ({commit, dispatch, state}, { name, parentID }) =
     },
     patches: []
   }
-  if (parentID) {
-    variables.patches.push({ op: 'add', path: `/relToParent/new_${parentID}`, value: JSON.stringify({ factSheetId: parentID }) })
+  if (parent) {
+    variables.patches.push({ op: 'add', path: `/relToParent/new_${parent.id}`, value: JSON.stringify({ factSheetId: parent.id }) })
   }
   return lx.executeGraphQL(query, variables)
     .then(res => {
+      const node = res.op.factSheet
+      node.parent = node.parent.edges.map(edge => { return {relID: edge.node.id, id: edge.node.factSheet.id, name: edge.node.factSheet.name} }).shift()
+
       Vue.notify({
         group: 'report',
         type: 'success',
-        title: `${name} added`
+        title: `Added ${node.name} ${node.parent ? `to ${node.parent.name}` : ''}`
       })
-      dispatch('fetchDataset')
+
+      commit('setNode', { node })
+      return Promise.resolve(node)
     })
     .catch(err => {
-      Vue.notify({
-        group: 'report',
-        type: 'error',
-        title: 'Error while creating factsheet',
-        text: `Check console for more details`
-      })
-      dispatch('fetchDataset')
       console.error(err)
+      if (Array.isArray(err.entries)) {
+        err.entries.forEach(entry => {
+          Vue.notify({
+            group: 'report',
+            type: 'error',
+            text: `${entry.message}`
+          })
+        })
+      } else {
+        Vue.notify({
+          group: 'report',
+          type: 'error',
+          title: 'Error while archiving factsheet',
+          text: `Check console for more details`
+        })
+      }
+      dispatch('fetchDataset')
     })
 }
 
-export const archiveFactsheet = ({commit, dispatch, state}, id) => {
+export const archiveFactsheet = ({commit, dispatch}, { node }) => {
   const query = `mutation($id:ID!,$patches:[Patch]!,$comment:String){updateFactSheet(id:$id,patches:$patches,comment:$comment){factSheet{id}}}`
   const variables = {
-    id,
+    id: node.id,
     patches: [{op: 'add', path: '/status', value: 'ARCHIVED'}],
     comment: 'Factsheet archived'
   }
@@ -288,29 +313,43 @@ export const archiveFactsheet = ({commit, dispatch, state}, id) => {
       Vue.notify({
         group: 'report',
         type: 'success',
-        title: `${id} archived`
+        title: `${node.displayName} archived`
       })
+      commit('removeNode', { node })
       dispatch('fetchDataset')
     })
     .catch(err => {
-      Vue.notify({
-        group: 'report',
-        type: 'error',
-        title: 'Error while archiving factsheet',
-        text: `Check console for more details`
-      })
-      dispatch('fetchDataset')
       console.error(err)
+      if (Array.isArray(err.entries)) {
+        err.entries.forEach(entry => {
+          Vue.notify({
+            group: 'report',
+            type: 'error',
+            text: `${entry.message}`
+          })
+        })
+      } else {
+        Vue.notify({
+          group: 'report',
+          type: 'error',
+          title: 'Error while archiving factsheet',
+          text: `Check console for more details`
+        })
+      }
+      dispatch('fetchDataset')
     })
 }
 
-export const updateFactsheetParent = ({dispatch, state}, { source, target, validateOnly = false }) => {
+export const updateFactsheetParent = ({dispatch, state, commit}, { source, target, validateOnly = false }) => {
+  console.log('updating', JSON.parse(JSON.stringify(source)), JSON.parse(JSON.stringify(target)))
   if (target.level >= state.maxLevel) return // should not add node to a level that will not be displayed
+  const factsheetType = state.factsheetType
+  const parentFragment = `... on ${factsheetType}{parent:relToParent{edges{node{factSheet{id name}}}}}`
   const id = source.id
   const rev = source.rev
   const relToParentID = source.parent.relID
   const newParentID = target.id
-  const query = `mutation($id:ID!,$rev:Long,$patches:[Patch]!,$comment:String,$validateOnly:Boolean){updateFactSheet(id:$id,rev:$rev,patches:$patches,comment:$comment,validateOnly:$validateOnly){factSheet{id}}}`
+  const query = `mutation($id:ID!,$rev:Long,$patches:[Patch]!,$comment:String,$validateOnly:Boolean){op:updateFactSheet(id:$id,rev:$rev,patches:$patches,comment:$comment,validateOnly:$validateOnly){factSheet{id type name displayName ${parentFragment}}}}`
   const variables = {
     id,
     rev,
@@ -321,23 +360,33 @@ export const updateFactsheetParent = ({dispatch, state}, { source, target, valid
   }
   return lx.executeGraphQL(query, variables)
     .then(res => {
-      console.log('resupdated!', res)
+      const node = res.op.factSheet
+      node.parent = node.parent.edges.map(edge => { return {relID: edge.node.id, id: edge.node.factSheet.id, name: edge.node.factSheet.name} }).shift()
       Vue.notify({
         group: 'report',
         type: 'success',
-        title: `${source.name} updated`
+        title: `Moved ${node.name} to ${node.parent.name}`
       })
+      commit('removeNode', { node: source })
+      commit('setNode', { node })
       dispatch('fetchDataset')
     })
     .catch(err => {
+      console.error(err)
       if (Array.isArray(err.entries)) {
         err.entries.forEach(entry => {
           Vue.notify({
             group: 'report',
             type: 'error',
-            // title: 'Error while updating factsheet',
             text: `${entry.message}`
           })
+        })
+      } else {
+        Vue.notify({
+          group: 'report',
+          type: 'error',
+          title: 'Error while archiving factsheet',
+          text: `Check console for more details`
         })
       }
       dispatch('fetchDataset')

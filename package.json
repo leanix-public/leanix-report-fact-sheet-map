@@ -1,6 +1,6 @@
 {
-  "name": "leanix-report-hierarchical-factsheet-editor",
-  "version": "1.0.0-rc.3",
+  "name": "leanix-report-fact-sheet-map",
+  "version": "1.0.0-rc.4",
   "description": "LeanIX custom report build with Vue.js.",
   "author": "Paulo dos Santos",
   "private": true,
@@ -86,8 +86,8 @@
     "not ie <= 8"
   ],
   "leanixReport": {
-    "id": "net.leanix.hierarchical-factsheet-editor",
-    "title": "Hierarchical Factsheet Editor",
+    "id": "net.leanix.fact-sheet-map",
+    "title": "FactSheet Map",
     "defaultConfig": {}
   }
 }

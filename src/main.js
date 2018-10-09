@@ -15,7 +15,6 @@ icons.forEach(icon => library.add(icon))
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(VueDragDrop)
-
 Vue.use(LeanixVuePlugin)
 Vue.use(Notifications)
 

@@ -1,23 +1,13 @@
 <template>
-  <div class="card" :collapsed="!childCount" @mouseover.stop="setHoverID(node.id)" @mouseleave.stop="setHoverID('')" :over="over">
-    <modal v-if="showAddFactsheetModal" @close="showAddFactsheetModal = false">
-      <div slot="header" class="mod-header">
-        <h4 style="display: inline-block">Add to {{node.displayName}}</h4>
-        <span class="close" @click.stop="showAddFactsheetModal = false">
-          <font-awesome-icon icon="times"/>
-        </span>
-      </div>
-      <div slot="body">
-        <label>Name</label>
-        <input type="text" v-model="newFactsheetName">
-      </div>
-      <div slot="footer">
-        <div class="btn-group">
-          <button class="btn" @click.stop="showAddFactsheetModal = false">Cancel</button>
-          <button class="btn btn-success" @click.stop="addFactsheet">Add</button>
-        </div>
-      </div>
-    </modal>
+  <div
+    class="card"
+    :collapsed="!childCount"
+    @mouseover.stop="setHoverID(node.id)"
+    @mouseleave.stop="setHoverID('')"
+    :over="over"
+    :id="`card-${node.id}`"
+  >
+    <add-factsheet-modal :show="showAddFactsheetModal" @close="showAddFactsheetModal = false" :node="node"/>
     <modal v-if="showDeleteFactsheetModal" @close="showDeleteFactsheetModal = false">
       <div slot="header" class="mod-header">
         <h4 style="display: inline-block">Confirm Deletion</h4>
@@ -33,7 +23,7 @@
         <button class="btn" @click.stop="showDeleteFactsheetModal = false">Cancel</button>
       </div>
     </modal>
-    <drag class="drag-container" :transfer-data="node" @dragstart="handleChildDragstart" :over="over">
+    <drag class="drag-container" :draggable="editing" :transfer-data="node" @dragstart="handleChildDragstart" :over="over">
       <drop
         class="collapsed section"
         v-if="!childCount"
@@ -42,9 +32,9 @@
         :hovered="isHovered"
         :over="over"
         @drop="handleDrop" @dragenter.native.stop="handleDragEnter" @dragover.native.stop="handleDragOver" @dragleave.native.stop="handleDragLeave">
-        {{name}}
+        <span @click="navigateToFactsheet" class="factsheet-link">{{name}}</span>
         <div class="actions" v-if="isHovered && editing">
-            <span class="btn flat" v-if="node.level < maxLevel" @click.stop="showAddFactsheetModal = true">
+          <span class="btn flat" v-if="node.level < maxLevel" @click.stop="showAddFactsheetModal = true">
             <font-awesome-icon icon="plus"/>
           </span>
           <span class="btn flat" @click.stop="showDeleteFactsheetModal = true">
@@ -54,7 +44,7 @@
       </drop>
       <div v-else class="section" :editing="editing" :hovered="isHovered">
         <div class="header" :style="style" :over="over">
-          <div>
+          <div @click="navigateToFactsheet" class="factsheet-link">
             {{name}}
           </div>
           <div class="actions" v-if="editing">
@@ -65,7 +55,7 @@
         </div>
         <drop class="body" @drop="handleDrop" @dragenter.native.stop="handleDragEnter" @dragover.native.stop="handleDragOver" @dragleave.native.stop="handleDragLeave" :over="over">
           <slot name="body">
-            <card v-for="child in node.children" :key="child.id" :node="child"/>
+            <card v-for="child in node.children" :key="child.id" :node="child" :parent="node"/>
           </slot>
         </drop>
       </div>
@@ -76,12 +66,17 @@
 
 <script>
 import Modal from './Modal'
+import AddFactsheetModal from './AddFactsheetModal'
 import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'Card',
-  components: { Modal },
+  components: { Modal, AddFactsheetModal },
   props: {
+    parent: {
+      type: Object,
+      required: false
+    },
     node: {
       type: Object,
       required: true
@@ -132,7 +127,7 @@ export default {
       this.showAddFactsheetModal = false
     },
     removeFactsheet () {
-      this.archiveFactsheet(this.node.id)
+      this.archiveFactsheet({ node: this.node, parent: this.parent })
         .catch(() => { })
       this.showDeleteFactsheetModal = false
     },
@@ -155,6 +150,9 @@ export default {
         this.updateFactsheetParent({ source: data, target: this.node })
         this.over = false
       }
+    },
+    navigateToFactsheet () {
+      this.$lx.openLink(`factsheet/${this.factsheetType}/${this.node.id}`, '_blank')
     }
   }
 }
@@ -267,4 +265,9 @@ $section-border = 1px solid #C5C5C5
         width "calc(100% * (1/3) - %s)" % $card-body-padding
         margin-right $card-body-padding
         margin-bottom $card-body-padding
+
+.factsheet-link
+  cursor pointer
+  &:hover
+    text-decoration underline
 </style>
