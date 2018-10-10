@@ -3,10 +3,12 @@ import Vuex from 'vuex'
 import * as getters from './getters'
 import * as actions from './actions'
 import * as mutations from './mutations'
+import plugin from './plugin'
 
 Vue.use(Vuex)
 
 const state = {
+  refreshTimer: undefined,
   reportSetup: {},
   reportConfig: {},
   reportId: '',
@@ -32,7 +34,8 @@ const store = new Vuex.Store({
   state,
   getters,
   actions,
-  mutations
+  mutations,
+  plugins: [plugin]
 })
 
 if (module.hot) {

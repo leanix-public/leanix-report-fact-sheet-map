@@ -1,3 +1,11 @@
+export const setRefreshTimer = (state, timer) => {
+  if (state.refreshTimer !== undefined) {
+    clearTimeout(state.refreshTimer)
+    delete state.refreshTimer
+  }
+  state.refreshTimer = timer
+}
+
 export const setReportSetup = (state, setup) => {
   state.reportSetup = setup
   const { config, reportId, savedState, settings } = setup
@@ -60,16 +68,52 @@ export const setNodes = (state, nodes) => {
   state.nodes = nodes
 }
 
+export const setNode = (state, { node }) => {
+  const child = JSON.parse(JSON.stringify(node))
+  if (!node.parent) {
+    state.nodes.push(node)
+  } else {
+    const parentID = node.parent.id
+    const nodes = state.nodes
+    let found = false
+
+    const checkChildren = (node, idx, parentID, found) => {
+      if (node.id === parentID) {
+        if (!Array.isArray(node.children)) node.children = []
+        node.children.push(child)
+        found = true
+        return found
+      }
+      if (node.children) node.children.some((child, idx) => checkChildren(child, idx, parentID, found))
+      return found
+    }
+    nodes.some((child, idx) => checkChildren(child, idx, parentID, found))
+  }
+}
+
+export const removeNode = (state, { node }) => {
+  const child = JSON.parse(JSON.stringify(node))
+  if (!node.parent) {
+    state.nodes = state.nodes.filter(node => node.id !== child.id)
+  } else {
+    const parentID = node.parent.id
+    const nodes = state.nodes
+    let found = false
+
+    const checkChildren = (node, idx, parentID, found) => {
+      if (node.id === parentID) {
+        node.children = Array.isArray(node.children) ? node.children.filter(_child => _child.id !== child.id) : []
+        found = true
+        return found
+      }
+      if (node.children) node.children.some((child, idx) => checkChildren(child, idx, parentID, found))
+      return found
+    }
+
+    nodes.some((child, idx) => checkChildren(child, idx, parentID, found))
+  }
+}
+
 export const setFilter = (state, filter) => {
   state.filter = filter
-}
-
-export const increment = state => {
-  state.count++
-  state.history.push('increment')
-}
-
-export const decrement = state => {
-  state.count--
-  state.history.push('decrement')
 }

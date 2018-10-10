@@ -1,4 +1,4 @@
-# leanix-report-hierarchical-factsheet-editor
+# leanix-report-fact-sheet-map
 
 > LeanIX custom report build with Vue.js.
 

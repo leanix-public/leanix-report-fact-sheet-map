@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <notifications group="report" position="bottom right"/>
+    <add-factsheet-modal :show="showAddFactsheetModal" @close="showAddFactsheetModal = false" />
     <modal v-if="showConfigurationModal" @close="showConfigurationModal = false">
       <div slot="header" class="mod-header">
         <h4 style="display: inline-block">Configure</h4>
@@ -35,7 +36,13 @@
         <span style="width: 20px">{{currentZoom}}%</span>
       </div>
     </div>
-    <div class="row export-container" :style="`font-size: ${fontSize}px`" style="margin-top: 2rem">
+    <div
+      class="row cards-container"
+      :style="`font-size: ${fontSize}px`"
+      style="margin-top: 2rem"
+      :editing="editing"
+      @click.stop="addCard"
+      ref="cardContainer">
       <card v-for="node in nodes" :key="node.id" :node="node" :factsheetType="factsheetType"/>
     </div>
 
@@ -44,15 +51,17 @@
 
 <script>
 import Card from './components/Card'
+import AddFactsheetModal from './components/AddFactsheetModal'
 import Modal from './components/Modal'
 import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'App',
-  components: { Card, Modal },
+  components: { Card, Modal, AddFactsheetModal },
   data () {
     return {
       showConfigurationModal: false,
+      showAddFactsheetModal: false,
       selected: ''
     }
   },
@@ -63,6 +72,14 @@ export default {
       this.$lx.updateConfiguration(reportConfig)
       this.showConfigurationModal = false
     },
+    factsheetTypeSelectionHandler (currentEntry) {
+      if (currentEntry.id !== this.selectedFactsheetType) {
+        this.selectedFactsheetType = currentEntry.id
+        const setup = this.reportSetup
+        const config = this.getReportConfig(setup)
+        this.$lx.updateConfiguration(config)
+      }
+    },
     getReportConfig (setupConfig) {
       const config = {
         allowEditing: true,
@@ -71,22 +88,54 @@ export default {
           exportElementSelector: '.export-container'
         },
         menuActions: {
-          showConfigure: true,
-          configureCallback: () => { this.showConfigurationModal = true }
+          showConfigure: false,
+          configureCallback: () => { this.showConfigurationModal = true },
+          customDropdowns: [
+            {
+              id: 'factsheets',
+              name: 'Factsheet Type',
+              entries: [
+                {
+                  id: 'BusinessCapability',
+                  name: 'Business Capability',
+                  callback: this.factsheetTypeSelectionHandler
+                },
+                {
+                  id: 'UserGroup',
+                  name: 'User Group',
+                  callback: this.factsheetTypeSelectionHandler
+                },
+                {
+                  id: 'TechnicalStack',
+                  name: 'Technical Stack',
+                  callback: this.factsheetTypeSelectionHandler
+                },
+                {
+                  id: 'DataObject',
+                  name: 'Data Object',
+                  callback: this.factsheetTypeSelectionHandler
+                }
+              ],
+              initialSelectionId: 'BusinessCapability'
+            }
+
+          ]
         },
         facets: [
           {
-            key: this.factsheetType,
-            label: lx.translateFactSheetType(this.factsheetType, 'plural'),
-            fixedFactSheetType: this.factsheetType,
+            key: this.selectedFactsheetType,
+            label: lx.translateFactSheetType(this.selectedFactsheetType, 'plural'),
+            fixedFactSheetType: this.selectedFactsheetType,
             attributes: ['type', 'displayName'], // how to get relations here...
             callback: facetData => {
               // console.log('facetData', facetData)
             },
-            facetFiltersChangedCallback: filter => this.setFilter(filter)
+            facetFiltersChangedCallback: filter => {
+              this.setFilter(filter)
+            }
           }
         ],
-        reportViewFactSheetType: this.factsheetType,
+        reportViewFactSheetType: this.selectedFactsheetType,
         reportViewCallback: data => {
           const {legendItems, mapping} = data
           this.setLegendItems(legendItems)
@@ -101,6 +150,9 @@ export default {
         }
       }
       return config
+    },
+    addCard (evt) {
+      if (this.editing && evt.target === this.$refs.cardContainer) this.showAddFactsheetModal = true
     }
   },
   computed: {
@@ -168,14 +220,21 @@ export default {
   flex-flow row
   align-items flex-start
   &.controls
+    background white
     align-items flex-start
     position fixed
-    right 1em
+    top 0
+    left 0
+    right 0
+    padding-bottom 0.5em
     align-self flex-end
+    justify-content flex-end
+    z-index 10
     & > .control
       font-size 11px
       display flex
       align-items center
+      padding-right 1em
     & > .levels
       margin-right 20px
       & > input
@@ -199,6 +258,10 @@ export default {
         font-size 14px
         & > i[loading]
             animation spin 2s linear infinite
+
+.cards-container
+  &[editing]
+    cursor copy
 
 @media print
   .no-print, .no-print *
