@@ -1,7 +1,7 @@
 {
   "name": "leanix-report-fact-sheet-map",
   "version": "1.0.0",
-  "description": "Custom report that allows to edit factsheet trees by adding, moving or removing nodes.",
+  "description": "Custom report for viewing and editing factsheet trees.",
   "author": {
     "name": "Paulo dos Santos",
     "email": "paulo@fazendadosoftware.com",
