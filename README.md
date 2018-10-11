@@ -1,6 +1,6 @@
 # leanix-report-fact-sheet-map
 
-> LeanIX custom report build with Vue.js.
+> Custom report for viewing and editing factsheet trees.
 
 ## Build Setup
 
