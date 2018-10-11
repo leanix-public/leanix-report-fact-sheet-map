@@ -2,11 +2,7 @@
   "name": "leanix-report-fact-sheet-map",
   "version": "1.0.0",
   "description": "Custom report for viewing and editing factsheet trees.",
-  "author": {
-    "name": "Paulo dos Santos",
-    "email": "paulo@fazendadosoftware.com",
-    "url": "https://www.fazendadosoftware.com"
-  },
+  "author": "Paulo dos Santos",
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
