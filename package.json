@@ -1,8 +1,12 @@
 {
   "name": "leanix-report-fact-sheet-map",
-  "version": "1.0.0-rc.12",
-  "description": "LeanIX custom report build with Vue.js.",
-  "author": "Paulo dos Santos",
+  "version": "1.0.0",
+  "description": "Custom report that allows to edit factsheet trees by adding, moving or removing nodes.",
+  "author": {
+    "name": "Paulo dos Santos",
+    "email": "paulo@fazendadosoftware.com",
+    "url": "https://www.fazendadosoftware.com"
+  },
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",

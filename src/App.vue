@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <notifications group="report" position="bottom right"/>
-    <add-factsheet-modal :show="showAddFactsheetModal" @close="showAddFactsheetModal = false" />
+    <add-factsheet-modal :show="AddFactsshowheetModal" @close="showAddFactsheetModal = false" />
     <modal v-if="showConfigurationModal" @close="showConfigurationModal = false">
       <div slot="header" class="mod-header">
         <h4 style="display: inline-block">Configure</h4>
@@ -12,8 +12,8 @@
       <div slot="body">
         <label>Factsheet Type</label>
         <select v-model="selectedFactsheetType">
-          <option v-for="factsheet in Object.values(factsheetTypes).filter(type => type.singular)" :key="factsheet.type" :value="factsheet.type">
-            {{ factsheet.singular }}
+          <option v-for="factsheet in allowedFactsheetTypes" :key="factsheet.id" :value="factsheet.id">
+            {{ factsheet.name }}
           </option>
         </select>
       </div>
@@ -62,7 +62,8 @@ export default {
     return {
       showConfigurationModal: false,
       showAddFactsheetModal: false,
-      selected: ''
+      selected: '',
+      allowedFactsheetTypes: []
     }
   },
   methods: {
@@ -73,11 +74,13 @@ export default {
       this.showConfigurationModal = false
     },
     factsheetTypeSelectionHandler (currentEntry) {
+      if (currentEntry === undefined) return
       if (currentEntry.id !== this.selectedFactsheetType) {
         this.selectedFactsheetType = currentEntry.id
         const setup = this.reportSetup
         const config = this.getReportConfig(setup)
-        this.$lx.updateConfiguration(config)
+        // this.$lx.updateConfiguration(config)
+        this.$lx.ready(config)
       }
     },
     getReportConfig (setupConfig) {
@@ -96,7 +99,7 @@ export default {
         ? setupConfig.settings.translations.factSheetTypes : {}
 
       const { config } = setupConfig
-      let allowedFactsheetTypes = ['BusinessCapability']
+      let allowedFactsheetTypes = ['BusinessCapability', 'UserGroup', 'DataObject']
       if (Array.isArray(config.allowedFactsheetTypes)) {
         const invalidTypes = config.allowedFactsheetTypes.filter(factsheetType => validFactsheetTypes.indexOf(factsheetType) < 0)
         if (invalidTypes.length) {
@@ -118,7 +121,7 @@ export default {
             callback: this.factsheetTypeSelectionHandler
           }
         })
-
+      this.allowedFactsheetTypes = entries
       return {
         allowEditing: true,
         allowTableView: true,
@@ -126,41 +129,18 @@ export default {
           exportElementSelector: '.export-container'
         },
         menuActions: {
-          showConfigure: false,
-          configureCallback: () => { this.showConfigurationModal = true },
+          showConfigure: true,
+          configureCallback: () => { this.showConfigurationModal = true }
+          /*
           customDropdowns: [
             {
               id: 'factsheets',
               name: 'Factsheet Type',
               entries,
-              /*
-              entries: [
-                {
-                  id: 'BusinessCapability',
-                  name: 'Business Capability',
-                  callback: this.factsheetTypeSelectionHandler
-                },
-                {
-                  id: 'UserGroup',
-                  name: 'User Group',
-                  callback: this.factsheetTypeSelectionHandler
-                },
-                {
-                  id: 'TechnicalStack',
-                  name: 'Technical Stack',
-                  callback: this.factsheetTypeSelectionHandler
-                },
-                {
-                  id: 'DataObject',
-                  name: 'Data Object',
-                  callback: this.factsheetTypeSelectionHandler
-                }
-              ],
-              */
-              initialSelectionId: allowedFactsheetTypes[0]
+              initialSelectionId: this.selectedFactsheetType
             }
-
           ]
+          */
         },
         facets: [
           {
@@ -217,7 +197,14 @@ export default {
         return this.factsheetType
       },
       set (factsheetType) {
-        this.setFactsheetType(factsheetType)
+        if (factsheetType !== this.factsheetType) {
+          this.setFactsheetType(factsheetType)
+          const setup = this.reportSetup
+          const config = this.getReportConfig(setup)
+          // this.$lx.updateConfiguration(config)
+          this.$lx.ready(config)
+          this.showConfigurationModal = false
+        }
       }
     },
     currentLevel: {
