@@ -81,7 +81,45 @@ export default {
       }
     },
     getReportConfig (setupConfig) {
-      const config = {
+      const factsheetViewModel = setupConfig &&
+        setupConfig.settings &&
+        setupConfig.settings.viewModel &&
+        Array.isArray(setupConfig.settings.viewModel.factSheets)
+        ? setupConfig.settings.viewModel.factSheets.reduce((accumulator, factsheet) => { accumulator[factsheet.type] = factsheet; return accumulator }, {})
+        : {}
+      const validFactsheetTypes = Object.keys(factsheetViewModel)
+
+      const factsheetTranslations = setupConfig &&
+        setupConfig.settings &&
+        setupConfig.settings.translations &&
+        setupConfig.settings.translations.factSheetTypes
+        ? setupConfig.settings.translations.factSheetTypes : {}
+
+      const { config } = setupConfig
+      let allowedFactsheetTypes = ['BusinessCapability']
+      if (Array.isArray(config.allowedFactsheetTypes)) {
+        const invalidTypes = config.allowedFactsheetTypes.filter(factsheetType => validFactsheetTypes.indexOf(factsheetType) < 0)
+        if (invalidTypes.length) {
+          console.error(`invalid factsheet types passed in the configuration object: ${JSON.stringify(invalidTypes)}`)
+          this.$notify({
+            group: 'report',
+            type: 'error',
+            title: 'Invalid factsheet types in report configuration',
+            text: `Check console for more details`
+          })
+        }
+        allowedFactsheetTypes = config.allowedFactsheetTypes.filter(factsheetType => validFactsheetTypes.indexOf(factsheetType) > -1)
+      }
+      const entries = allowedFactsheetTypes
+        .map(type => {
+          return {
+            id: type,
+            name: factsheetTranslations[type] ? factsheetTranslations[type] : type,
+            callback: this.factsheetTypeSelectionHandler
+          }
+        })
+
+      return {
         allowEditing: true,
         allowTableView: true,
         export: {
@@ -94,6 +132,8 @@ export default {
             {
               id: 'factsheets',
               name: 'Factsheet Type',
+              entries,
+              /*
               entries: [
                 {
                   id: 'BusinessCapability',
@@ -116,7 +156,8 @@ export default {
                   callback: this.factsheetTypeSelectionHandler
                 }
               ],
-              initialSelectionId: 'BusinessCapability'
+              */
+              initialSelectionId: allowedFactsheetTypes[0]
             }
 
           ]
@@ -149,14 +190,28 @@ export default {
           }
         }
       }
-      return config
     },
     addCard (evt) {
       if (this.editing && evt.target === this.$refs.cardContainer) this.showAddFactsheetModal = true
     }
   },
   computed: {
-    ...mapGetters(['dataset', 'filter', 'level', 'nodes', 'legendItems', 'editing', 'maxLevel', 'factsheetType', 'zoom', 'maxZoom', 'hoverID', 'factsheetTypes', 'reportSetup']),
+    ...mapGetters([
+      'dataset',
+      'filter',
+      'level',
+      'nodes',
+      'legendItems',
+      'editing',
+      'maxLevel',
+      'factsheetType',
+      'zoom',
+      'maxZoom',
+      'hoverID',
+      'factsheetTypes',
+      'reportSetup',
+      'reportConfig'
+    ]),
     selectedFactsheetType: {
       get () {
         return this.factsheetType
