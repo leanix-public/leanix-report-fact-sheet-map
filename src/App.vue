@@ -38,8 +38,7 @@
     </div>
     <div
       class="row cards-container"
-      :style="`font-size: ${fontSize}px`"
-      style="margin-top: 2rem"
+      :style="`font-size: ${fontSize}px; margin-top: ${isIE ? '4' : '2'}rem`"
       :editing="editing"
       @click.stop="addCard"
       ref="cardContainer">
@@ -192,6 +191,9 @@ export default {
       'reportSetup',
       'reportConfig'
     ]),
+    isIE () {
+      return navigator && navigator.userAgent ? navigator.userAgent.indexOf('Trident') > -1 : false
+    },
     selectedFactsheetType: {
       get () {
         return this.factsheetType
