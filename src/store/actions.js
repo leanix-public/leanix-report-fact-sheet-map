@@ -341,7 +341,6 @@ export const archiveFactsheet = ({commit, dispatch}, { node }) => {
 }
 
 export const updateFactsheetParent = ({dispatch, state, commit}, { source, target, validateOnly = false }) => {
-  console.log('updating', JSON.parse(JSON.stringify(source)), JSON.parse(JSON.stringify(target)))
   if (target.level >= state.maxLevel) return // should not add node to a level that will not be displayed
   const factsheetType = state.factsheetType
   const parentFragment = `... on ${factsheetType}{parent:relToParent{edges{node{factSheet{id name}}}}}`
