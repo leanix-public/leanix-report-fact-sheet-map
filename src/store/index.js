@@ -27,7 +27,10 @@ const state = {
   viewMapping: {},
   zoom: 100,
   maxZoom: 150,
-  hoverID: ''
+  hoverID: '',
+  selectedID: '',
+  selectedNode: undefined,
+  isIE: navigator && navigator.userAgent ? navigator.userAgent.indexOf('Trident') > -1 : false
 }
 
 const store = new Vuex.Store({
