@@ -25,6 +25,14 @@ export const setHoverID = ({ commit }, id) => {
   commit('setHoverID', id)
 }
 
+export const setSelectedID = ({ commit }, id) => {
+  commit('setSelectedID', id)
+}
+
+export const setSelectedNode = ({ commit }, node) => {
+  commit('setSelectedNode', node)
+}
+
 export const setLegendItems = ({ commit }, legendItems) => {
   legendItems = Object.values(legendItems)
     .reduce((accumulator, item) => {
@@ -368,6 +376,7 @@ export const updateFactsheetParent = ({dispatch, state, commit}, { source, targe
       })
       commit('removeNode', { node: source })
       commit('setNode', { node })
+      commit('setSelectedNode', undefined)
       dispatch('fetchDataset')
     })
     .catch(err => {

@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <notifications group="report" position="bottom right"/>
-    <add-factsheet-modal :show="AddFactsshowheetModal" @close="showAddFactsheetModal = false" />
+    <add-factsheet-modal :show="showAddFactsheetModal" @close="showAddFactsheetModal = false" />
     <modal v-if="showConfigurationModal" @close="showConfigurationModal = false">
       <div slot="header" class="mod-header">
         <h4 style="display: inline-block">Configure</h4>
@@ -38,8 +38,7 @@
     </div>
     <div
       class="row cards-container"
-      :style="`font-size: ${fontSize}px`"
-      style="margin-top: 2rem"
+      :style="`font-size: ${fontSize}px; margin-top: ${isIE ? '4' : '2'}rem`"
       :editing="editing"
       @click.stop="addCard"
       ref="cardContainer">
@@ -67,7 +66,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['fetchDataset', 'setFilter', 'setLevel', 'setLegendItems', 'setViewMapping', 'setEditing', 'setZoom', 'setReportSetup', 'setFactsheetType']),
+    ...mapActions(['fetchDataset', 'setFilter', 'setLevel', 'setLegendItems', 'setViewMapping', 'setEditing', 'setZoom', 'setReportSetup', 'setFactsheetType', 'setSelectedID']),
     applyConfiguration () {
       const reportConfig = this.getReportConfig(this.reportSetup)
       this.$lx.updateConfiguration(reportConfig)
@@ -173,6 +172,11 @@ export default {
     },
     addCard (evt) {
       if (this.editing && evt.target === this.$refs.cardContainer) this.showAddFactsheetModal = true
+    },
+    detectEscKeyPress (evt) {
+      if (evt.key === 'Escape') {
+        this.setSelectedID('')
+      }
     }
   },
   computed: {
@@ -190,7 +194,8 @@ export default {
       'hoverID',
       'factsheetTypes',
       'reportSetup',
-      'reportConfig'
+      'reportConfig',
+      'isIE'
     ]),
     selectedFactsheetType: {
       get () {
@@ -240,6 +245,12 @@ export default {
         this.$lx.showEditToggle()
         this.$lx.ready(reportConfig)
       })
+  },
+  mounted () {
+    document.addEventListener('keydown', this.detectEscKeyPress)
+  },
+  beforeDestroy () {
+    document.removeEventListener('keydown', this.detectEscKeyPress)
   }
 }
 </script>

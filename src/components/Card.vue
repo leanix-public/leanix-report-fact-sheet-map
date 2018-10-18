@@ -5,7 +5,10 @@
     @mouseover.stop="setHoverID(node.id)"
     @mouseleave.stop="setHoverID('')"
     :over="over"
+    :selected="isSelected"
+    :not-selected="isNotSelected"
     :id="`card-${node.id}`"
+    @click.stop="handleClickEvent"
   >
     <add-factsheet-modal :show="showAddFactsheetModal" @close="showAddFactsheetModal = false" :node="node"/>
     <modal v-if="showDeleteFactsheetModal" @close="showDeleteFactsheetModal = false">
@@ -23,16 +26,20 @@
         <button class="btn" @click.stop="showDeleteFactsheetModal = false">Cancel</button>
       </div>
     </modal>
-    <drag class="drag-container" :draggable="editing" :transfer-data="node" @dragstart="handleChildDragstart" :over="over">
+    <drag class="drag-container" :draggable="editing" :transfer-data="node" @dragstart="handleChildDragstart" :over="over" :selected="isSelected">
       <drop
         class="collapsed section"
         v-if="!childCount"
         :style="style"
         :editing="editing"
         :hovered="isHovered"
+        :selected="isSelected"
+        :not-selected="isNotSelected"
         :over="over"
         @drop="handleDrop" @dragenter.native.stop="handleDragEnter" @dragover.native.stop="handleDragOver" @dragleave.native.stop="handleDragLeave">
-        <span @click="navigateToFactsheet" class="factsheet-link">{{name}}</span>
+        <span @click="navigateToFactsheet" class="factsheet-link">
+          {{name}}
+        </span>
         <div class="actions" v-if="isHovered && editing">
           <span class="btn flat" v-if="node.level < maxLevel" @click.stop="showAddFactsheetModal = true">
             <font-awesome-icon icon="plus"/>
@@ -40,9 +47,12 @@
           <span class="btn flat" @click.stop="showDeleteFactsheetModal = true">
             <font-awesome-icon icon="minus"/>
           </span>
+          <span v-if="isIE" class="btn flat" @click.stop="toggleFactsheetSelection">
+            <font-awesome-icon icon="arrows-alt"/>
+          </span>
         </div>
       </drop>
-      <div v-else class="section" :editing="editing" :hovered="isHovered">
+      <div v-else class="section" :editing="editing" :hovered="isHovered" :selected="isSelected" :not-selected="isNotSelected">
         <div class="header" :style="style" :over="over">
           <div @click="navigateToFactsheet" class="factsheet-link">
             {{name}}
@@ -50,6 +60,9 @@
           <div class="actions" v-if="editing">
             <span class="btn flat" @click.stop="showAddFactsheetModal = true">
               <font-awesome-icon icon="plus"/>
+            </span>
+            <span v-if="isIE" class="btn flat" @click.stop="toggleFactsheetSelection">
+              <font-awesome-icon icon="arrows-alt"/>
             </span>
           </div>
         </div>
@@ -92,7 +105,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['legendItems', 'viewMapping', 'editing', 'factsheetType', 'maxLevel', 'hoverID']),
+    ...mapGetters(['legendItems', 'viewMapping', 'editing', 'factsheetType', 'maxLevel', 'hoverID', 'selectedNode', 'isIE']),
     name () {
       // wrap at 30 characters´
       return this.node.name && this.node.name.length > 37 ? `${this.node.name.substr(0, 37)}...` : this.node.name
@@ -116,10 +129,16 @@ export default {
     },
     isHovered () {
       return this.node.id === this.hoverID
+    },
+    isSelected () {
+      return this.selectedNode && this.node.id === this.selectedNode.id
+    },
+    isNotSelected () {
+      return this.selectedNode && this.node.id !== this.selectedNode.id
     }
   },
   methods: {
-    ...mapActions(['createFactsheet', 'archiveFactsheet', 'setHoverID', 'updateFactsheetParent']),
+    ...mapActions(['createFactsheet', 'archiveFactsheet', 'setHoverID', 'updateFactsheetParent', 'setSelectedNode']),
     addFactsheet () {
       this.createFactsheet({ name: this.newFactsheetName, parentID: this.node.id })
         .catch(() => { })
@@ -153,6 +172,15 @@ export default {
     },
     navigateToFactsheet () {
       this.$lx.openLink(`factsheet/${this.factsheetType}/${this.node.id}`, '_blank')
+    },
+    toggleFactsheetSelection () {
+      const selectedNode = this.selectedNode && this.selectedNode.id === this.node.id ? undefined : this.node
+      this.setSelectedNode(selectedNode)
+    },
+    handleClickEvent () {
+      if (this.isNotSelected && this.selectedNode) {
+        this.updateFactsheetParent({ source: this.selectedNode, target: this.node })
+      }
     }
   }
 }
@@ -164,16 +192,10 @@ export default {
 $border-radius = 6px
 $card-max-width = 25em
 $collapsed-height = 5em
-$card-body-padding = 8px
+$card-body-padding = 10px
 $body-background-color = #f3f3f3
 $header-background-color = #354567
 $section-border = 1px solid #C5C5C5
-
-.drag-container
-  border-radius $border-radius
-  &[over]
-    z-depth-4dp()
-    z-depth-transition()
 
 .card
   background-color $body-background-color
@@ -183,15 +205,28 @@ $section-border = 1px solid #C5C5C5
   transition background-color 0.3s ease
   cursor default
   border-radius $border-radius
+  &[not-selected=true]
+    cursor pointer
+    [hovered]
+      background-color clr-grey-800 !important
+      color white !important
+      border $section-border
 
   .section
     // z-depth-2dp() // Uncomment for material layout
     border $section-border
     border-radius $border-radius
+    transition background-color 0.3s ease
     &[over]
       background-color clr-grey-800 !important
       color white !important
-      border none
+      border $section-border
+      border-radius $border-radius
+    &[selected]
+      background-color clr-green-800 !important
+      color white !important
+      border $section-border
+      border-radius $border-radius
   .collapsed
     transition background-color 0.3s ease
     box-sizing border-box
@@ -237,7 +272,7 @@ $section-border = 1px solid #C5C5C5
     align-items center
     justify-content center
     transition background-color 0.3s ease
-    &[over]
+    &[over], &[selected]
       background-color clr-grey-800 !important
       color white !important
     &[selected]
@@ -247,6 +282,9 @@ $section-border = 1px solid #C5C5C5
     & > .actions
       position absolute
       right 0
+      bottom 0
+      top 0
+      display flex
       & > .btn
         font-size 12px
         padding 0.5em

@@ -48,6 +48,14 @@ export const setHoverID = (state, id) => {
   state.hoverID = id
 }
 
+export const setSelectedID = (state, id) => {
+  state.selectedID = id
+}
+
+export const setSelectedNode = (state, node) => {
+  state.selectedNode = node
+}
+
 export const setLegendItems = (state, legendItems) => {
   state.legendItems = legendItems
 }
