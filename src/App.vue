@@ -42,7 +42,7 @@
       :editing="editing"
       @click.stop="addCard"
       ref="cardContainer">
-      <card v-for="node in nodes" :key="node.id" :node="node" :factsheetType="factsheetType"/>
+      <card v-for="node in nodes" :key="node.id" :node="node" :factsheetType="factsheetType" :baseUrl="baseUrl"/>
     </div>
 
   </div>
@@ -59,6 +59,7 @@ export default {
   components: { Card, Modal, AddFactsheetModal },
   data () {
     return {
+      baseUrl: '',
       showConfigurationModal: false,
       showAddFactsheetModal: false,
       selected: '',
@@ -83,6 +84,8 @@ export default {
       }
     },
     getReportConfig (setupConfig) {
+      const { baseUrl } = setupConfig.settings
+      this.baseUrl = baseUrl
       const factsheetViewModel = setupConfig &&
         setupConfig.settings &&
         setupConfig.settings.viewModel &&

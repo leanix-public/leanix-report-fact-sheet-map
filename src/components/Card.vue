@@ -86,6 +86,10 @@ export default {
   name: 'Card',
   components: { Modal, AddFactsheetModal },
   props: {
+    baseUrl: {
+      type: String,
+      required: false
+    },
     parent: {
       type: Object,
       required: false
@@ -171,7 +175,7 @@ export default {
       }
     },
     navigateToFactsheet () {
-      this.$lx.openLink(`factsheet/${this.factsheetType}/${this.node.id}`, '_blank')
+      this.$lx.openLink(`${this.baseUrl}/factsheet/${this.factsheetType}/${this.node.id}`, '_blank')
     },
     toggleFactsheetSelection () {
       const selectedNode = this.selectedNode && this.selectedNode.id === this.node.id ? undefined : this.node

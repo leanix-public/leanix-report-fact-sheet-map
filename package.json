@@ -1,6 +1,6 @@
 {
   "name": "leanix-report-fact-sheet-map",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Custom report for viewing and editing factsheet trees.",
   "author": "Paulo dos Santos",
   "private": true,
@@ -87,7 +87,7 @@
     "not ie <= 8"
   ],
   "leanixReport": {
-    "id": "net.leanix.fact-sheet-map",
+    "id": "net.leanix.fact_sheet_map",
     "title": "FactSheet Map",
     "defaultConfig": {}
   }
