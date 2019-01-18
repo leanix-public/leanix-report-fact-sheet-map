@@ -68,7 +68,7 @@
         </div>
         <drop class="body" @drop="handleDrop" @dragenter.native.stop="handleDragEnter" @dragover.native.stop="handleDragOver" @dragleave.native.stop="handleDragLeave" :over="over">
           <slot name="body">
-            <card v-for="child in node.children" :key="child.id" :node="child" :parent="node"/>
+            <card v-for="child in node.children" :key="child.id" :node="child" :parent="node" :factsheetType="factsheetType" :baseUrl="baseUrl"/>
           </slot>
         </drop>
       </div>
